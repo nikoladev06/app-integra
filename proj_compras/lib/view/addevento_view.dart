@@ -1,257 +1,269 @@
 // views/addevento_view.dart
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import '../model/postevento_model.dart';
-import '../model/user_model.dart';
+import '../controller/addevento_controller.dart';
 
 class AddEventoView extends StatefulWidget {
-  final Function(Evento) onEventoCriado;
-  final UserModel usuarioAtual;
-
-  const AddEventoView({
-    super.key,
-    required this.onEventoCriado,
-    required this.usuarioAtual,
-  });
+  const AddEventoView({super.key});
 
   @override
   State<AddEventoView> createState() => _AddEventoViewState();
 }
 
 class _AddEventoViewState extends State<AddEventoView> {
-  final _tituloController = TextEditingController();
-  final _descricaoController = TextEditingController();
-  final _localController = TextEditingController();
-  
-  DateTime _dataEvento = DateTime.now().add(const Duration(days: 1));
-  TimeOfDay _horaEvento = TimeOfDay.now();
+  final AddEventoController _controller = AddEventoController();
+  final TextEditingController _tituloController = TextEditingController();
+  final TextEditingController _descricaoController = TextEditingController();
+  final TextEditingController _localizacaoController = TextEditingController();
+  DateTime? _dataSelecionada;
+  TimeOfDay _horaSelecionada = TimeOfDay.now();
+  bool _isLoading = false;
 
-Future<void> _selecionarData() async {
-  final DateTime? picked = await showDatePicker(
-    context: context,
-    initialDate: _dataEvento,
-    firstDate: DateTime.now(),
-    lastDate: DateTime(2100),
-    builder: (context, child) {
-      return Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: Color(0xFF45b5b7),
-            onPrimary: Colors.white,
-            surface: Color(0xFF111112),
-            onSurface: Colors.white,
-          ),
-        ),
-        child: child!,
-      );
-    },
-  );
-  if (picked != null) {
-    setState(() {
-      _dataEvento = picked;
-    });
+  @override
+  void dispose() {
+    _tituloController.dispose();
+    _descricaoController.dispose();
+    _localizacaoController.dispose();
+    super.dispose();
   }
-}
 
-Future<void> _selecionarHora() async {
-  final TimeOfDay? picked = await showTimePicker(
-    context: context,
-    initialTime: _horaEvento,
-    builder: (context, child) {
-      return Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: Color(0xFF45b5b7),
-            onPrimary: Colors.white,
-            surface: Color(0xFF111112),
-            onSurface: Colors.white,
+  Future<void> _selecionarData() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2101),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF6200EE),
+              onPrimary: Colors.white,
+              surface: Color(0xFF1F1F20),
+              onSurface: Colors.white,
+            ),
           ),
-        ),
-        child: child!,
-      );
-    },
-  );
-  if (picked != null) {
-    setState(() {
-      _horaEvento = picked;
-    });
-  }
-}
+          child: child!,
+        );
+      },
+    );
 
-  void _criarEvento() {
-    if (_tituloController.text.isEmpty || _descricaoController.text.isEmpty) {
-      // Mostra mensagem de erro se campos estiverem vazios
+    if (picked != null && picked != _dataSelecionada) {
+      setState(() {
+        _dataSelecionada = picked;
+      });
+    }
+  }
+
+  Future<void> _selecionarHora() async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: _horaSelecionada,
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.dark().copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF45b5b7),
+              onPrimary: Colors.white,
+              surface: Color(0xFF111112),
+              onSurface: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _horaSelecionada = picked;
+      });
+    }
+  }
+
+  Future<void> _criarEvento() async {
+    if (_tituloController.text.isEmpty ||
+        _descricaoController.text.isEmpty ||
+        _localizacaoController.text.isEmpty ||
+        _dataSelecionada == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Preencha título e descrição'),
-          backgroundColor: Colors.red,
-        ),
+        const SnackBar(content: Text('Por favor, preencha todos os campos')),
       );
       return;
     }
 
-    // Combina data e hora
-    final dataHoraCompleta = DateTime(
-      _dataEvento.year,
-      _dataEvento.month,
-      _dataEvento.day,
-      _horaEvento.hour,
-      _horaEvento.minute,
-    );
+    setState(() => _isLoading = true);
 
-    // Cria o novo evento
-    final novoEvento = Evento(
-      id: DateTime.now().millisecondsSinceEpoch,
-      title: _tituloController.text,
-      description: _descricaoController.text,
-      date: dataHoraCompleta,
-      location: _localController.text,
-      imageUrl: "https://",
-      user: widget.usuarioAtual,
-    );
+    try {
+      await _controller.criarEvento(
+        _tituloController.text,
+        _descricaoController.text,
+        DateTime(
+          _dataSelecionada!.year,
+          _dataSelecionada!.month,
+          _dataSelecionada!.day,
+          _horaSelecionada.hour,
+          _horaSelecionada.minute,
+        ),
+        _localizacaoController.text,
+        null, // imagemUrl opcional
+      );
 
-    // chama a função para adicionar o evento
-    widget.onEventoCriado(novoEvento);
-    Navigator.of(context).pop(); // fecha o modal
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Evento criado com sucesso!')),
+        );
+        Navigator.pop(context, true); // Retorna true para indicar sucesso
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: const Color(0xFF1E1E1E),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
+    return Scaffold(
+      backgroundColor: const Color(0xFF111112),
+      appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: const Color(0xFF1F1F20),
+        title: const Text('Criar Evento', style: TextStyle(color: Colors.white)),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            // Cabeçalho
-            Row(
-              children: [
-                const Text(
-                  'Novo Evento',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white, size: 20),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // Título
             TextField(
               controller: _tituloController,
               style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: 'Título',
-                labelStyle: TextStyle(color: Color(0xFF45b5b7)),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: 'Título do Evento',
+                labelStyle: const TextStyle(color: Colors.grey),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey[600]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF45b5b7)),
+                  borderSide: const BorderSide(color: Color(0xFF6200EE)),
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
             ),
-
-            const SizedBox(height: 15),
-
-            // Descrição
+            const SizedBox(height: 16),
             TextField(
               controller: _descricaoController,
               style: const TextStyle(color: Colors.white),
-              maxLines: 2,
-              decoration: const InputDecoration(
+              maxLines: 4,
+              decoration: InputDecoration(
                 labelText: 'Descrição',
-                labelStyle: TextStyle(color: Color(0xFF45b5b7)),
-                border: OutlineInputBorder(),
+                labelStyle: const TextStyle(color: Colors.grey),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey[600]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF45b5b7)),
+                  borderSide: const BorderSide(color: Color(0xFF6200EE)),
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
             ),
-
-            const SizedBox(height: 15),
-
-            // Local
+            const SizedBox(height: 16),
             TextField(
-              controller: _localController,
+              controller: _localizacaoController,
               style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                labelText: 'Local (opcional)',
-                labelStyle: TextStyle(color: Color(0xFF45b5b7)),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: 'Localização',
+                labelStyle: const TextStyle(color: Colors.grey),
+                prefixIcon: const Icon(Icons.location_on, color: Colors.grey),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey[600]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF45b5b7)),
+                  borderSide: const BorderSide(color: Color(0xFF6200EE)),
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
             ),
-
-            const SizedBox(height: 15),
-
-            // Data e Hora
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _selecionarData,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF45b5b7),
-                    ),
-                    icon: const Icon(Icons.calendar_today, size: 18, color: Colors.white),
-                    label: Text(
-                      DateFormat('dd/MM/yyyy').format(_dataEvento),
-                      style: TextStyle(
-                        color: Colors.white
-                      ),
-                      
-                      ),
-                  ),
+            const SizedBox(height: 16),
+            GestureDetector(
+              onTap: _selecionarData,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[600]!),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _selecionarHora,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF45b5b7),
-                    ),
-                    icon: const Icon(Icons.access_time, size: 18, color: Colors.white),
-                    label: Text(
-                      _horaEvento.format(context),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today, color: Colors.grey),
+                    const SizedBox(width: 12),
+                    Text(
+                      _dataSelecionada == null
+                          ? 'Selecione a data'
+                          : '${_dataSelecionada!.day}/${_dataSelecionada!.month}/${_dataSelecionada!.year}',
                       style: TextStyle(
-                        color: Colors.white
+                        color: _dataSelecionada == null
+                            ? Colors.grey
+                            : Colors.white,
+                        fontSize: 16,
                       ),
-                      ),
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-
-            const SizedBox(height: 20),
-
-            // Botão Criar
+            const SizedBox(height: 16),
+            GestureDetector(
+              onTap: _selecionarHora,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[600]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.access_time, color: Colors.grey),
+                    const SizedBox(width: 12),
+                    Text(
+                      _horaSelecionada.format(context),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
+              height: 50,
               child: ElevatedButton(
-                onPressed: _criarEvento,
+                onPressed: _isLoading ? null : _criarEvento,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF45b5b7),
-                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  backgroundColor: const Color(0xFF6200EE),
                 ),
-                child: const Text(
-                  'Criar Evento',
-                  style: TextStyle(
-                    fontSize: 16, 
-                    fontWeight: FontWeight.bold, 
-                    color: Colors.white
-                    ),
-                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        'Criar Evento',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
               ),
             ),
           ],

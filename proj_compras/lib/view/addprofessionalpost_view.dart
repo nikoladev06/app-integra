@@ -1,111 +1,174 @@
 import 'package:flutter/material.dart';
-import '../model/user_model.dart';
-import '../model/professionalpost_model.dart';
 import '../controller/addprofessionalpost_controller.dart';
 
 class AddProfessionalPostView extends StatefulWidget {
-  final Function(ProfessionalPost) onProfessionalPostCriado;
-  final UserModel usuarioAtual;
-
-  const AddProfessionalPostView({
-    super.key,
-    required this.onProfessionalPostCriado,
-    required this.usuarioAtual,
-  });
+  const AddProfessionalPostView({super.key});
 
   @override
-  State<AddProfessionalPostView> createState() => _AddProfessionalPostViewState();
+  State<AddProfessionalPostView> createState() =>
+      _AddProfessionalPostViewState();
 }
 
 class _AddProfessionalPostViewState extends State<AddProfessionalPostView> {
-  final _controller = AddProfessionalPostController();
+  final AddProfessionalPostController _controller =
+      AddProfessionalPostController();
+  final TextEditingController _descricaoController = TextEditingController();
+  final TextEditingController _empresaController = TextEditingController();
+  String? _tipoSelecionado;
+  bool _isLoading = false;
 
-  void _criarProfessionalPost() {
-    if (!_controller.validarFormulario()) {
-      // Mostra mensagem de erro se a descrição estiver vazia
+  final List<String> _tipos = [
+    'Vaga de Emprego',
+    'Estágio',
+    'Oportunidade',
+    'Freelance',
+  ];
+
+  @override
+  void dispose() {
+    _descricaoController.dispose();
+    _empresaController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _criarPost() async {
+    if (_descricaoController.text.isEmpty ||
+        _empresaController.text.isEmpty ||
+        _tipoSelecionado == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Preencha a descrição da vaga'),
-          backgroundColor: Colors.red,
-        ),
+        const SnackBar(content: Text('Por favor, preencha todos os campos')),
       );
       return;
     }
 
-    // Cria o novo post usando o controller
-    final novoPost = _controller.createProfessionalPost(widget.usuarioAtual);
+    setState(() => _isLoading = true);
 
-    // Chama a função para adicionar o post
-    widget.onProfessionalPostCriado(novoPost);
-    _controller.limparFormulario(); // Limpa o formulário
-    Navigator.of(context).pop(); // fecha o modal
+    try {
+      await _controller.criarPostProfissional(
+        _descricaoController.text,
+        _tipoSelecionado!,
+        _empresaController.text,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Post criado com sucesso!')),
+        );
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString())),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: const Color(0xFF1E1E1E),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
+    return Scaffold(
+      backgroundColor: const Color(0xFF111112),
+      appBar: AppBar(
+        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: const Color(0xFF1F1F20),
+        title: const Text('Criar Post Profissional', style: TextStyle(color: Colors.white)),
+        centerTitle: true,
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            // Cabeçalho
-            Row(
-              children: [
-                const Text(
-                  'Nova Vaga/Oportunidade',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white, size: 20),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // Descrição
-            TextField(
-              controller: _controller.descriptionController,
+            DropdownButtonFormField<String>(
+              value: _tipoSelecionado,
+              dropdownColor: const Color(0xFF1F1F20),
               style: const TextStyle(color: Colors.white),
-              maxLines: 4,
-              decoration: const InputDecoration(
-                labelText: 'Descrição da vaga',
-                labelStyle: TextStyle(color: Color(0xFF45b5b7)),
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: 'Tipo de Publicação',
+                labelStyle: const TextStyle(color: Colors.grey),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey[600]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF45b5b7)),
+                  borderSide: const BorderSide(color: Color(0xFF6200EE)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              items: _tipos.map((tipo) {
+                return DropdownMenuItem(
+                  value: tipo,
+                  child: Text(tipo),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _tipoSelecionado = value;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _empresaController,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Empresa',
+                labelStyle: const TextStyle(color: Colors.grey),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey[600]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(color: Color(0xFF6200EE)),
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
             ),
-
-            const SizedBox(height: 20),
-
-            // Botão Criar
+            const SizedBox(height: 16),
+            TextField(
+              controller: _descricaoController,
+              style: const TextStyle(color: Colors.white),
+              maxLines: 6,
+              decoration: InputDecoration(
+                labelText: 'Descrição',
+                labelStyle: const TextStyle(color: Colors.grey),
+                hintText:
+                    'Descreva a vaga, requisitos, benefícios, etc.',
+                hintStyle: TextStyle(color: Colors.grey[600]),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey[600]!),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: const BorderSide(color: Color(0xFF6200EE)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
+              height: 50,
               child: ElevatedButton(
-                onPressed: _criarProfessionalPost,
+                onPressed: _isLoading ? null : _criarPost,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF45b5b7),
-                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  backgroundColor: const Color(0xFF6200EE),
                 ),
-                child: const Text(
-                  'Publicar',
-                  style: TextStyle(
-                    fontSize: 16, 
-                    fontWeight: FontWeight.bold, 
-                    color: Colors.white
-                  ),
-                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        'Publicar',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
               ),
             ),
           ],

@@ -1,68 +1,78 @@
 // controller/addevento_controller.dart
-import 'package:flutter/material.dart';
-import '../model/postevento_model.dart';
-import '../model/user_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class AddEventoController extends ChangeNotifier {
-  final TextEditingController tituloController = TextEditingController();
-  final TextEditingController descricaoController = TextEditingController();
-  final TextEditingController localController = TextEditingController();
-  
-  DateTime _dataEvento = DateTime.now();
-  TimeOfDay _horaEvento = TimeOfDay.now();
+class AddEventoController {
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
-  DateTime get dataEvento => _dataEvento;
-  TimeOfDay get horaEvento => _horaEvento;
+  Future<bool> criarEvento(
+    String titulo,
+    String descricao,
+    DateTime data,
+    String localizacao,
+    String? imagemUrl,
+  ) async {
+    try {
+      print('🔄 Criando evento...');
+      User? user = _firebaseAuth.currentUser;
 
-  void setDataEvento(DateTime data) {
-    _dataEvento = data;
-    notifyListeners();
-  }
+      if (user == null) {
+        throw 'Usuário não autenticado';
+      }
 
-  void setHoraEvento(TimeOfDay hora) {
-    _horaEvento = hora;
-    notifyListeners();
-  }
+      // Validações
+      if (titulo.isEmpty) {
+        throw 'Título é obrigatório';
+      }
 
-  DateTime get dataHoraCompleta => DateTime(
-    _dataEvento.year,
-    _dataEvento.month,
-    _dataEvento.day,
-    _horaEvento.hour,
-    _horaEvento.minute,
-  );
+      if (descricao.isEmpty) {
+        throw 'Descrição é obrigatória';
+      }
 
-  Evento criarEvento(UserModel usuarioAtual) {
-    return Evento(
-      id: DateTime.now().millisecondsSinceEpoch, //posteriormente gerado automaticamente via BD
-      title: tituloController.text,
-      description: descricaoController.text,
-      date: dataHoraCompleta,
-      location: localController.text,
-      imageUrl: "https://",
-      user: usuarioAtual,
-    );
-  }
+      if (localizacao.isEmpty) {
+        throw 'Localização é obrigatória';
+      }
 
-  bool validarFormulario() {
-    return tituloController.text.isNotEmpty && 
-           descricaoController.text.isNotEmpty;
-  }
+      if (data.isBefore(DateTime.now())) {
+        throw 'A data do evento não pode ser no passado';
+      }
 
-  void limparFormulario() {
-    tituloController.clear();
-    descricaoController.clear();
-    localController.clear();
-    _dataEvento = DateTime.now().add(const Duration(days: 1));
-    _horaEvento = TimeOfDay.now();
-    notifyListeners();
-  }
+      // Obter dados do usuário
+      DocumentSnapshot userDoc =
+          await _firebaseFirestore.collection('users').doc(user.uid).get();
 
-  @override
-  void dispose() {
-    tituloController.dispose();
-    descricaoController.dispose();
-    localController.dispose();
-    super.dispose();
+      if (!userDoc.exists) {
+        throw 'Perfil do usuário não encontrado';
+      }
+
+      Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+
+      // Gerar ID único para o evento
+      int eventoId = DateTime.now().millisecondsSinceEpoch;
+
+      // Criar documento do evento
+      await _firebaseFirestore.collection('eventos').add({
+        'id': eventoId,
+        'userId': user.uid,
+        'title': titulo,
+        'description': descricao,
+        'date': Timestamp.fromDate(data),
+        'location': localizacao,
+        'imageUrl': imagemUrl ?? '',
+        'nomeCompleto': userData['nomeCompleto'] ?? '',
+        'username': userData['username'] ?? '',
+        'createdAt': Timestamp.now(),
+        'isLiked': false,
+        'likesCount': 0,
+        'comentarios': [],
+      });
+
+      print('✅ Evento criado com sucesso');
+      return true;
+    } catch (e) {
+      print('❌ Erro ao criar evento: $e');
+      rethrow;
+    }
   }
 }

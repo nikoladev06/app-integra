@@ -1,207 +1,74 @@
-import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../model/postevento_model.dart';
 import '../model/user_model.dart';
-import '../model/comentario_model.dart';
 
-class FeedEventos extends ChangeNotifier {
-  final List<Evento> _eventos = [
-    Evento(
-      id: 1,
-      title: "Integra Fatec RP",
-      description: "Halloween da Fatec RP: open bar e muita música",
-      date: DateTime(2025, 10, 28, 22, 0),
-      location: "",
-      imageUrl: "https://img.oticket.com.br/unsafe/fit-in/1920x1920/filters:format(webp):quality(90)/event/xzeGxbHWebHB7YBbS7bCFbMiC.jpeg",
-      user: UserModel(id: 1, email: "admin@admin.com", name: "Admin", password: "123"),
-      likesCount: 15,
-    ),
-    Evento(
-      id: 2,
-      title: "Semana Acadêmica Fatec RP",
-      description: "Palestras, workshops e networking com profissionais da área de tecnologia.",
-      date: DateTime(2025, 11, 10),
-      location: "Auditório Principal - Fatec RP",
-      imageUrl: "https://",
-      user: UserModel(id: 1, email: "admin@admin.com", name: "Admin", password: "123"),
-      likesCount: 8,
-    ),
-    Evento(
-      id: 3,
-      title: "InterFatecs 2025",
-      description: "Competições esportivas e culturais entre as Fatecs do estado de São Paulo.",
-      date: DateTime(2025, 12, 5),
-      location: "Ginásio Municipal de Ribeirão Preto",
-      imageUrl: "https://",
-      user: UserModel(id: 1, email: "admin@admin.com", name: "Admin", password: "123"),
-      likesCount: 23,
-    )
-  ];
+class FeedEventos {
+  final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
-  List<Evento> get eventos => _eventos;
-  final UserModel _usuarioAtual = UserModel(
-    id: 2,
-    email: "usuario@email.com", 
-    name: "Usuário", 
-    password: "123"
-  );
+  Future<List<Evento>> obterEventos() async {
+    try {
+      print('🔄 Obtendo eventos do Firebase...');
+      print('📍 Acessando collection: eventos');
+      
+      QuerySnapshot snapshot = await _firebaseFirestore
+          .collection('eventos')
+          .orderBy('createdAt', descending: true)
+          .get();
 
-  UserModel get usuarioAtual => _usuarioAtual;
+      print('✅ ${snapshot.docs.length} eventos encontrados');
+      
+      if (snapshot.docs.isEmpty) {
+        print('⚠️ Nenhum documento encontrado na collection');
+        return [];
+      }
 
-  void addEvento(Evento newEvento) {
-    _eventos.insert(0, newEvento);
-    notifyListeners();
-  }
-
-  void deleteEvento(int eventoId) {
-    _eventos.removeWhere((e) => e.id == eventoId);
-    notifyListeners();
-  }
-
-  void toggleLike(int eventoId) {
-    final evento = _eventos.firstWhere((e) => e.id == eventoId);
-    evento.isLiked = !evento.isLiked;
-    evento.likesCount += evento.isLiked ? 1 : -1;
-    notifyListeners();
-  }
-
-  void addComentario(int eventoId, String texto) {
-    final evento = _eventos.firstWhere((e) => e.id == eventoId);
-    evento.comentarios.add(Comentario(
-      id: DateTime.now().millisecondsSinceEpoch,
-      user: _usuarioAtual,
-      text: texto,
-      createdAt: DateTime.now(),
-    ));
-    notifyListeners();
-  }
-
-  bool isDonoEvento(Evento evento) {
-    return evento.user.id == _usuarioAtual.id;
-  }
-
-  void mostrarOpcoesEvento(BuildContext context, Evento evento) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF222225),
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (isDonoEvento(evento))
-            _buildOpcaoMenu(
-              Icons.delete, 
-              'Excluir', 
-              Colors.red, 
-              () {
-                _confirmarExclusao(context, evento);
-              }
-            ),
-          _buildOpcaoMenu(
-            Icons.report, 
-            'Denunciar', 
-            Colors.orange, 
-            () {
-              Navigator.pop(context);
-              _mostrarSnackbar(context, 'Evento denunciado!', Colors.orange);
-            }
-          ),
-          _buildOpcaoMenu(
-            Icons.cancel, 
-            'Cancelar', 
-            Colors.grey, 
-            () {
-              Navigator.pop(context);
-            }
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _confirmarExclusao(BuildContext context, Evento evento) {
-    Navigator.pop(context);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF222225),
-        title: const Text('Excluir Evento', style: TextStyle(color: Colors.white)),
-        content: const Text('Tem certeza?', style: TextStyle(color: Colors.white)),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
-          ),
-          TextButton(
-            onPressed: () {
-              deleteEvento(evento.id);
-              Navigator.pop(context);
-              _mostrarSnackbar(context, 'Evento excluído!', Colors.green);
-            },
-            child: const Text('Excluir', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void mostrarDialogComentario(BuildContext context, Evento evento) {
-    final controller = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF222225),
-        title: const Text('Comentar', style: TextStyle(color: Colors.white)),
-        content: TextField(
-          controller: controller,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
-            hintText: 'Digite seu comentário...',
-            hintStyle: TextStyle(color: Colors.grey),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            child: const Text('Cancelar', style: TextStyle(color: Colors.grey)),
-          ),
-          TextButton(
-            onPressed: () {
-              final texto = controller.text.trim();
-              if (texto.isNotEmpty) {
-                addComentario(evento.id, texto);
-                Navigator.pop(context);
-                _mostrarSnackbar(context, 'Comentário adicionado!', Colors.green);
-              }
-            },
-            child: const Text('Comentar', style: TextStyle(color: Color(0xFF45b5b7))),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void compartilharEvento(BuildContext context, Evento evento) {
-    _mostrarSnackbar(context, 'Compartilhando: ${evento.title}', const Color(0xFF45b5b7));
-  }
-
-  ListTile _buildOpcaoMenu(IconData icon, String texto, Color cor, VoidCallback onTap) { //esse ListTile é melhor para "botões" que são ícone + texto
-    return ListTile(                                                                     // e pra ListTile é melhor usar onTap no lugar de onPressed
-      leading: Icon(icon, color: cor),
-      title: Text(texto, style: TextStyle(color: cor)),
-      onTap: onTap,
-    );
-  }
-
-  void _mostrarSnackbar(BuildContext context, String texto, Color cor) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(texto), 
-        backgroundColor: cor, 
-        duration: const Duration(seconds: 2)
-      )
-    );
+      List<Evento> eventos = [];
+      
+      for (var doc in snapshot.docs) {
+        print('📄 Documento: ${doc.id}');
+        print('📊 Dados: ${doc.data()}');
+        
+        try {
+          final user = UserModel(
+            uid: doc['userId'] ?? '',
+            email: doc['userId'] ?? '', // Usando userId como email temporariamente
+            nomeCompleto: doc['nomeCompleto'] ?? 'Usuário',
+            username: doc['username'] ?? 'usuario',
+            universidade: 'FATEC RP',
+            curso: 'ADS',
+            telefone: '',
+          );
+          
+          final evento = Evento(
+            id: doc['id'] ?? 0,
+            title: doc['title'] ?? '',
+            description: doc['description'] ?? '',
+            date: doc['date'] != null 
+                ? (doc['date'] as Timestamp).toDate()
+                : DateTime.now(),
+            location: doc['location'] ?? '',
+            imageUrl: doc['imageUrl'] ?? '',
+            user: user,
+            createdAt: doc['createdAt'] != null
+                ? (doc['createdAt'] as Timestamp).toDate()
+                : DateTime.now(),
+            isLiked: doc['isLiked'] ?? false,
+            likesCount: doc['likesCount'] ?? 0,
+            comentarios: [],
+          );
+          
+          eventos.add(evento);
+          print('✅ Evento adicionado: ${evento.title}');
+        } catch (e) {
+          print('❌ Erro ao processar documento ${doc.id}: $e');
+        }
+      }
+      
+      print('✅ Total de eventos processados: ${eventos.length}');
+      return eventos;
+    } catch (e) {
+      print('❌ Erro ao obter eventos: $e');
+      return [];
+    }
   }
 }
