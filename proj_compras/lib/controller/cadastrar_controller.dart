@@ -55,13 +55,13 @@ class CadastrarController {
 
       // Validações
       print('🔍 Validando campos...');
-      
-      if (nomeCompleto.isEmpty || nomeCompleto.split(' ').length < 2) {
-        throw 'Nome completo deve ter pelo menos 2 nomes';
-      }
 
       if (email.isEmpty || !RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(email)) {
         throw 'Email inválido. Use o formato: usuario@exemplo.com';
+      }
+      
+      if (nomeCompleto.isEmpty || nomeCompleto.split(' ').length < 2) {
+        throw 'Nome completo deve ter pelo menos 2 nomes';
       }
 
       if (username.isEmpty || username.length < 3) {

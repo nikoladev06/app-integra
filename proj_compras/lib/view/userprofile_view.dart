@@ -393,19 +393,23 @@ class _UserProfileViewState extends State<UserProfileView> {
                 ),
                 const SizedBox(height: 8),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
-                      Icons.location_on_outlined,
-                      size: 12,
-                      color: Colors.grey,
+                    const Padding(
+                      padding: EdgeInsets.only(top: 2),
+                      child: Icon(Icons.location_on_outlined, size: 12, color: Colors.grey),
                     ),
                     const SizedBox(width: 4),
-                    Text(
+                    Expanded(
+                      child: Text(
                       evento.location,
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.grey,
                       ),
+                      softWrap: true,
+                      overflow: TextOverflow.visible,
+                     ),
                     ),
                   ],
                 ),
