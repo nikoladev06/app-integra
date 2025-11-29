@@ -2,19 +2,18 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import '../services/maps_service.dart';
+import '../model/place_details_model.dart'; // 🔥 Importa o novo modelo
 
 class AddEventoController {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
-  Future<bool> criarEvento(
+  Future<bool> criarEventoComPlaceDetails(
     BuildContext context,
     String titulo,
     String descricao,
     DateTime? data,
-    String localizacao,
-    String? imagemUrl,
+    PlaceDetails? placeDetails,
   ) async {
     try {
       print('🔄 Criando evento...');
@@ -30,7 +29,7 @@ class AddEventoController {
         erroValidacao = 'Descrição é obrigatória';
       } else if (data == null) {
         erroValidacao = 'Data é obrigatória';
-      } else if (localizacao.isEmpty) {
+      } else if (placeDetails == null || placeDetails.formattedAddress.isEmpty) {
         erroValidacao = 'Localização é obrigatória';
       } else if (data.isBefore(DateTime.now())) {
         erroValidacao = 'A data do evento não pode ser no passado';
@@ -46,30 +45,12 @@ class AddEventoController {
       User userNonNull = user!;
       DateTime dataNonNull = data!;
 
-      // 🔥 DICAS (não impedem a criação)
-      if (!localizacao.contains(',') && !localizacao.contains('-')) {
-        _mostrarSnackBarDica(context, '💡 Dica: Use "Rua, Número - Cidade, Estado" para melhor precisão');
-      }
-
-      final partes = localizacao.split(',');
-      if (partes.length < 2) {
-        _mostrarSnackBarDica(context, '💡 Dica: Inclua a cidade e estado após uma vírgula');
-      }
-
       // Obter dados do usuário
       DocumentSnapshot userDoc =
           await _firebaseFirestore.collection('users').doc(userNonNull.uid).get();
 
       if (!userDoc.exists) {
         _mostrarSnackBarErro(context, 'Perfil do usuário não encontrado');
-        return false;
-      }
-
-      print('📍 Convertendo endereço em coordenadas...');
-      final coordinates = await GeocodingService.getCoordinates(localizacao);
-
-      if (coordinates == null) {
-        _mostrarSnackBarErro(context, 'Endereço não encontrado. Tente usar: "Rua, Número - Cidade, Estado"');
         return false;
       }
 
@@ -85,10 +66,10 @@ class AddEventoController {
         'title': titulo,
         'description': descricao,
         'date': Timestamp.fromDate(dataNonNull), // 🔥 AGORA dataNonNull
-        'location': localizacao,
-        'latitude': coordinates['lat'],
-        'longitude': coordinates['lng'], 
-        'imageUrl': imagemUrl ?? '',
+        'location': placeDetails!.formattedAddress, // Usa o endereço formatado
+        'latitude': placeDetails.latitude,       // Usa a latitude obtida
+        'longitude': placeDetails.longitude,      // Usa a longitude obtida
+        'imageUrl': '', // Você pode adicionar a lógica para imagem aqui
         'nomeCompleto': userData['nomeCompleto'] ?? '',
         'username': userData['username'] ?? '',
         'createdAt': Timestamp.now(),
@@ -106,6 +87,8 @@ class AddEventoController {
       return false;
     }
   }
+
+  // O método criarEvento antigo foi removido para evitar confusão.
 
   // 🔥 SNACKBAR PARA ERROS (Vermelho)
   void _mostrarSnackBarErro(BuildContext context, String mensagem) {

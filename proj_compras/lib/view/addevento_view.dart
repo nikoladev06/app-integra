@@ -1,6 +1,10 @@
 // views/addevento_view.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 import '../controller/addevento_controller.dart';
+import '../model/place_details_model.dart';
+import 'google_places_service.dart';
+
 
 class AddEventoView extends StatefulWidget {
   const AddEventoView({super.key});
@@ -16,6 +20,8 @@ class _AddEventoViewState extends State<AddEventoView> {
   final TextEditingController _localizacaoController = TextEditingController();
   DateTime? _dataSelecionada;
   TimeOfDay _horaSelecionada = TimeOfDay.now();
+  PlaceDetails? _placeDetails; // 🔥 ARMAZENA OS DETALHES DO LOCAL
+  final GooglePlacesService _placesService = GooglePlacesService();
   bool _isLoading = false;
 
   @override
@@ -35,8 +41,8 @@ class _AddEventoViewState extends State<AddEventoView> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFF6200EE),
+            colorScheme: const ColorScheme.dark(
+              primary: Color(0xFF45b5b7),
               onPrimary: Colors.white,
               surface: Color(0xFF1F1F20),
               onSurface: Colors.white,
@@ -95,13 +101,13 @@ Future<void> _criarEvento() async {
       );
     }
 
-    final sucesso = await _controller.criarEvento(
+    // 🔥 AGORA ENVIAMOS OS DETALHES DO LOCAL (QUE CONTÊM LAT/LNG)
+    final sucesso = await _controller.criarEventoComPlaceDetails(
       context,
       _tituloController.text,
       _descricaoController.text,
       dataParaEnviar, // 🔥 PODE SER NULL - CONTROLLER VAI VALIDAR
-      _localizacaoController.text,
-      null,
+      _placeDetails,
     );
 
     if (sucesso && mounted) {
@@ -128,9 +134,9 @@ Future<void> _criarEvento() async {
     return Scaffold(
       backgroundColor: const Color(0xFF111112),
       appBar: AppBar(
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: const Color(0xFF1F1F20),
-        title: const Text('Criar Evento', style: TextStyle(color: Colors.white)),
+        iconTheme: const IconThemeData(color: Colors.white), // Cor do ícone de voltar
+        backgroundColor: const Color(0xFF111112), // Cor de fundo igual ao corpo da tela
+        title: const Text('Criar Evento', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         centerTitle: true,
         elevation: 0,
       ),
@@ -149,7 +155,7 @@ Future<void> _criarEvento() async {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Color(0xFF6200EE)),
+                  borderSide: const BorderSide(color: Color(0xFF45b5b7)),
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
@@ -167,30 +173,84 @@ Future<void> _criarEvento() async {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Color(0xFF6200EE)),
+                  borderSide: const BorderSide(color: Color(0xFF45b5b7)),
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            TextField(
+            TypeAheadField<PlaceSuggestion>(
+              // 🔥 PASSO 1: Diz ao TypeAhead para usar o SEU controller.
               controller: _localizacaoController,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Localização',
-                labelStyle: const TextStyle(color: Colors.grey),
-                hintText: 'Ex: Av. Paulista, 1000 - São Paulo, SP',
-                hintStyle: TextStyle(color: Colors.grey[500]),
-                prefixIcon: const Icon(Icons.location_on, color: Colors.grey),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey[600]!),
-                  borderRadius: BorderRadius.circular(8),
+              suggestionsCallback: (pattern) async {
+                // 🔥 PASSO 1: VERIFICAR SE ESTA FUNÇÃO É CHAMADA
+                print('>>> TypeAheadField: suggestionsCallback ativada com o padrão: "$pattern"');
+
+                // Chama a API apenas se o usuário digitar algo
+                if (pattern.isNotEmpty) {
+                  try {
+                    return await _placesService.fetchSuggestions(pattern);
+                  } catch (e) {
+                    print('❌ ERRO CRÍTICO na chamada do fetchSuggestions: $e');
+                    return []; // Retorna lista vazia em caso de erro
+                  }
+                }
+                return [];
+              },
+              itemBuilder: (context, suggestion) {
+                return ListTile(
+                  leading: const Icon(Icons.location_on_outlined, color: Colors.grey),
+                  title: Text(suggestion.description, style: const TextStyle(color: Colors.white)),
+                  tileColor: const Color(0xFF1F1F20),
+                );
+              },
+              onSelected: (suggestion) async {
+                // 1. Atualiza o campo de texto com a descrição
+                _localizacaoController.text = suggestion.description;
+
+                // 2. 🔥 BUSCA OS DETALHES (LAT/LNG) USANDO O placeId
+                final details = await _placesService.getPlaceDetails(suggestion.placeId);
+                if (details != null) {
+                  setState(() {
+                    _placeDetails = details;
+                  });
+                  print('✅ Detalhes do local obtidos: $_placeDetails');
+                }
+                // O token de sessão já foi reiniciado dentro de getPlaceDetails
+              },
+              builder: (context, controller, focusNode) {
+                // 🔥 PASSO 2: O TextField continua usando o SEU controller.
+                return TextField( 
+                controller: _localizacaoController,
+                focusNode: focusNode,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  labelText: 'Localização', 
+                  labelStyle: const TextStyle(color: Colors.grey),
+                  hintText: 'Ex: Av. Paulista, 1000 - São Paulo, SP',
+                  hintStyle: TextStyle(color: Colors.grey[500]),
+                  prefixIcon: const Icon(Icons.location_on, color: Colors.grey),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey[600]!),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: const BorderSide(color: Color(0xFF45b5b7)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: const BorderSide(color: Color(0xFF6200EE)),
-                  borderRadius: BorderRadius.circular(8),
+              );
+              },
+              emptyBuilder: (context) => const Padding(
+                padding: EdgeInsets.all(12.0),
+                child: Text(
+                  'Nenhum endereço encontrado.',
+                  style: TextStyle(color: Colors.grey),
                 ),
               ),
+              // O debounce é controlado aqui (em milissegundos)
+              // A API só será chamada 500ms após o usuário parar de digitar
+              debounceDuration: const Duration(milliseconds: 500),
             ),
             const SizedBox(height: 16),
             GestureDetector(
@@ -251,7 +311,8 @@ Future<void> _criarEvento() async {
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _criarEvento,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6200EE),
+                  backgroundColor: const Color(0xFF45b5b7), // Cor padrão do app
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)

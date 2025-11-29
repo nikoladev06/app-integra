@@ -8,14 +8,22 @@ import 'package:proj_compras/view/sobre_view.dart';
 import 'package:proj_compras/view/home_view.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
+  // Garante que os bindings do Flutter estejam prontos antes de qualquer outra coisa.
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Inicializa o Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  await dotenv.load(fileName: ".env");
+
   runApp(
     DevicePreview(
-      enabled: true,
+      enabled: false, 
       builder: (context) => const MainApp(),
       )
   );
@@ -27,6 +35,8 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      locale: DevicePreview.locale(context),
+      builder: DevicePreview.appBuilder,
       debugShowCheckedModeBanner: false,
       title: 'Navegação',
       initialRoute: 'inicio',
