@@ -13,7 +13,6 @@ class AddProfessionalPostController {
     String empresa,
   ) async {
     try {
-      print('🔄 Criando post profissional...');
       User? user = _firebaseAuth.currentUser;
 
       if (user == null) {
@@ -62,10 +61,8 @@ class AddProfessionalPostController {
         'comentarios': [],
       });
 
-      print('✅ Post profissional criado com sucesso');
       return true;
     } catch (e) {
-      print('❌ Erro ao criar post profissional: $e');
       rethrow;
     }
   }

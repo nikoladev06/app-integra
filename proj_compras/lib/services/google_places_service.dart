@@ -37,21 +37,18 @@ class GooglePlacesService {
     if (response.statusCode == 200) {
       final result = json.decode(response.body);
       if (result['status'] == 'OK') {
-        print('✅ GooglePlacesService: Sugestões recebidas com sucesso!');
         return result['predictions']
             .map<PlaceSuggestion>((p) => PlaceSuggestion(p['place_id'], p['description']))
             .toList();
       } else {
-        // 🔥 AQUI ESTÁ A MUDANÇA: Mostra o erro retornado pelo Google
-        print('❌ GooglePlacesService: Erro da API do Google: ${result['status']}');
         if (result['error_message'] != null) {
           print('   -> Mensagem: ${result['error_message']}');
         }
       }
     } else {
-      // 🔥 MOSTRA ERRO DE CONEXÃO
-      print('❌ GooglePlacesService: Erro de conexão HTTP: ${response.statusCode}');
-      print('   -> Corpo da resposta: ${response.body}');
+      // MOSTRA ERRO DE CONEXÃO
+      print(' GooglePlacesService: Erro de conexão HTTP: ${response.statusCode}');
+      print(' -> Corpo da resposta: ${response.body}');
     }
 
     _sessionToken = Uuid().v4();
@@ -84,6 +81,6 @@ class GooglePlacesService {
   /// Deve ser chamado após um local ser selecionado ou a busca ser cancelada.
   void restartSessionToken() {
     _sessionToken = Uuid().v4();
-    print('🔄 GooglePlacesService: Session Token reiniciado.');
+    print('GooglePlacesService: Session Token reiniciado.');
   }
 }

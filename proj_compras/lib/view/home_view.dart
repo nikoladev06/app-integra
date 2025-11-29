@@ -63,27 +63,18 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _carregarEventos() async {
-  print('🔄 HOMEVIEW: FORÇANDO recarregamento de eventos...');
   setState(() => _isLoadingEventos = true);
   
   try {
-    // 🔥 FORÇA UM NOVO FETCH DOS DADOS
+    // FORÇA UM NOVO FETCH DOS DADOS
     final novosEventos = await _feedEventosController.obterEventos();
-    
-    print('✅ HOMEVIEW: ${novosEventos.length} eventos carregados do Firebase');
-    
-    // 🔥 VERIFICA SE ALGUM EVENTO FOI REALMENTE DELETADO
-    if (_eventosAtuais.length != novosEventos.length) {
-      print('📊 HOMEVIEW: Lista atualizada - Antes: ${_eventosAtuais.length}, Depois: ${novosEventos.length}');
-    }
-    
+        
     setState(() {
       _eventosAtuais = novosEventos;
       _isLoadingEventos = false;
     });
     
   } catch (e) {
-    print('❌ HOMEVIEW: Erro crítico ao carregar eventos: $e');
     if (mounted) {
       setState(() => _isLoadingEventos = false);
     }
@@ -99,7 +90,6 @@ class _HomeViewState extends State<HomeView> {
         setState(() => _isLoadingProfissional = false);
       }
     } catch (e) {
-      print('❌ Erro ao carregar posts profissionais: $e');
       if (mounted) {
         setState(() => _isLoadingProfissional = false);
       }
@@ -115,11 +105,10 @@ class _HomeViewState extends State<HomeView> {
         });
       }
     } catch (e) {
-      print('❌ Erro ao carregar perfil no drawer: $e');
+      rethrow;   
     }
   }
 
-  // 🔥 NOVO MÉTODO: Widget de preview do mapa
   Widget _buildMapPreview(double? lat, double? lng, String location) {
     if (lat == null || lng == null) {
       // Fallback: mostrar apenas o texto da localização
@@ -143,7 +132,6 @@ class _HomeViewState extends State<HomeView> {
         // Mini mapa preview
         GestureDetector(
           onTap: () {
-            // TODO: Implementar abertura do mapa completo
             _mostrarDialogoMapa(location, lat, lng);
           },
           child: Container(
@@ -474,21 +462,16 @@ class _HomeViewState extends State<HomeView> {
               title: const Text('Perfil', style: TextStyle(color: Colors.white)),
               onTap: () {
                 Navigator.pop(context); // Fecha o drawer
-                
-                print('🚀 HOMEVIEW: Navegando para UserProfileView...');
-                
+                                
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => const UserProfileView(),
                   ),
                 ).then((_) {
-                  // 🔥 FORÇA RECARREGAMENTO COM DELAY PARA GARANTIR
-                  print('🔄 HOMEVIEW: Voltou do UserProfileView - recarregando em 500ms...');
                   
                   Future.delayed(const Duration(milliseconds: 500), () {
                     if (mounted) {
-                      print('🔄 HOMEVIEW: Executando recarregamento...');
                       _carregarEventos();
                       _carregarPostsProfissionais();
                     }
@@ -707,28 +690,28 @@ class _HomeViewState extends State<HomeView> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Icon(
-                                    evento.isLiked
-                                        ? Icons.favorite
-                                        : Icons.favorite_outline,
-                                    size: 18,
-                                    color: evento.isLiked
-                                        ? Colors.red
-                                        : Colors.grey,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${evento.likesCount}',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              // const SizedBox(height: 12),
+                              // Row(
+                              //   children: [
+                              //     Icon(
+                              //       evento.isLiked
+                              //           ? Icons.favorite
+                              //           : Icons.favorite_outline,
+                              //       size: 18,
+                              //       color: evento.isLiked
+                              //           ? Colors.red
+                              //           : Colors.grey,
+                              //     ),
+                              //     const SizedBox(width: 4),
+                              //     Text(
+                              //       '${evento.likesCount}',
+                              //       style: const TextStyle(
+                              //         fontSize: 12,
+                              //         color: Colors.grey,
+                              //       ),
+                              //     ),
+                              //   ],
+                              // ),
                             ],
                           ),
                         ),
@@ -835,31 +818,31 @@ class _HomeViewState extends State<HomeView> {
                                   fontSize: 13,
                                   color: Colors.grey[400],
                                 ),
-                                maxLines: 2,
+                                maxLines: 4,
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Icon(
-                                    post.isLiked
-                                        ? Icons.favorite
-                                        : Icons.favorite_outline,
-                                    size: 18,
-                                    color: post.isLiked
-                                        ? Colors.red
-                                        : Colors.grey,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${post.likesCount}',
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              // const SizedBox(height: 12),
+                              // Row(
+                              //   children: [
+                              //     Icon(
+                              //       post.isLiked
+                              //           ? Icons.favorite
+                              //           : Icons.favorite_outline,
+                              //       size: 18,
+                              //       color: post.isLiked
+                              //           ? Colors.red
+                              //           : Colors.grey,
+                              //     ),
+                              //     const SizedBox(width: 4),
+                              //     Text(
+                              //       '${post.likesCount}',
+                              //       style: const TextStyle(
+                              //         fontSize: 12,
+                              //         color: Colors.grey,
+                              //       ),
+                              //     ),
+                              //   ],
+                              // ),
                             ],
                           ),
                         ),

@@ -34,12 +34,9 @@ class RecuperarsenhaController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print('📧 Enviando e-mail de recuperação para: $email');
       
       await _firebaseAuth.sendPasswordResetEmail(email: email);
-      
-      print('✅ E-mail enviado com sucesso');
-      
+            
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -57,7 +54,6 @@ class RecuperarsenhaController extends ChangeNotifier {
         });
       }
     } on FirebaseAuthException catch (e) {
-      print('❌ Erro Firebase: ${e.code} - ${e.message}');
       
       String mensagem = 'Erro ao enviar e-mail';
       
@@ -78,7 +74,6 @@ class RecuperarsenhaController extends ChangeNotifier {
         );
       }
     } catch (e) {
-      print('❌ Erro desconhecido: $e');
       
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

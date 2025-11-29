@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import '../controller/addevento_controller.dart';
 import '../model/place_details_model.dart';
-import 'google_places_service.dart';
+import '../services/google_places_service.dart';
 
 
 class AddEventoView extends StatefulWidget {
@@ -180,18 +180,14 @@ Future<void> _criarEvento() async {
             ),
             const SizedBox(height: 16),
             TypeAheadField<PlaceSuggestion>(
-              // 🔥 PASSO 1: Diz ao TypeAhead para usar o SEU controller.
               controller: _localizacaoController,
               suggestionsCallback: (pattern) async {
-                // 🔥 PASSO 1: VERIFICAR SE ESTA FUNÇÃO É CHAMADA
-                print('>>> TypeAheadField: suggestionsCallback ativada com o padrão: "$pattern"');
 
                 // Chama a API apenas se o usuário digitar algo
                 if (pattern.isNotEmpty) {
                   try {
                     return await _placesService.fetchSuggestions(pattern);
                   } catch (e) {
-                    print('❌ ERRO CRÍTICO na chamada do fetchSuggestions: $e');
                     return []; // Retorna lista vazia em caso de erro
                   }
                 }
@@ -205,21 +201,20 @@ Future<void> _criarEvento() async {
                 );
               },
               onSelected: (suggestion) async {
-                // 1. Atualiza o campo de texto com a descrição
+                //Atualiza o campo de texto com a descrição
                 _localizacaoController.text = suggestion.description;
 
-                // 2. 🔥 BUSCA OS DETALHES (LAT/LNG) USANDO O placeId
+                //BUSCA OS DETALHES (LAT/LNG) USANDO O placeId
                 final details = await _placesService.getPlaceDetails(suggestion.placeId);
                 if (details != null) {
                   setState(() {
                     _placeDetails = details;
                   });
-                  print('✅ Detalhes do local obtidos: $_placeDetails');
                 }
                 // O token de sessão já foi reiniciado dentro de getPlaceDetails
               },
               builder: (context, controller, focusNode) {
-                // 🔥 PASSO 2: O TextField continua usando o SEU controller.
+                //TextField continua usando o controller.
                 return TextField( 
                 controller: _localizacaoController,
                 focusNode: focusNode,

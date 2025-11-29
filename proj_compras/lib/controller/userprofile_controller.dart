@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import '../model/user_profile_model.dart';
 import '../model/user_model.dart';
 import '../model/postevento_model.dart';
@@ -13,11 +12,9 @@ class UserProfileController {
   // Obter dados do usuário atual
   Future<UserProfile?> obterPerfilAtual() async {
     try {
-      print('🔄 Obtendo perfil do usuário...');
       User? user = _firebaseAuth.currentUser;
 
       if (user == null) {
-        print('❌ Usuário não autenticado');
         return null;
       }
 
@@ -25,12 +22,10 @@ class UserProfileController {
           await _firebaseFirestore.collection('users').doc(user.uid).get();
 
       if (doc.exists) {
-        print('✅ Perfil obtido com sucesso');
         return UserProfile.fromJson(doc.data() as Map<String, dynamic>);
       }
       return null;
     } catch (e) {
-      print('❌ Erro ao obter perfil: $e');
       return null;
     }
   }
@@ -43,7 +38,6 @@ class UserProfileController {
     String curso,
   ) async {
     try {
-      print('🔄 Atualizando perfil...');
       User? user = _firebaseAuth.currentUser;
 
       if (user == null) {
@@ -84,10 +78,8 @@ class UserProfileController {
         'alteradoEm': DateTime.now(),
       });
 
-      print('✅ Perfil atualizado com sucesso');
       return true;
     } catch (e) {
-      print('❌ Erro ao atualizar perfil: $e');
       rethrow;
     }
   }
@@ -99,7 +91,6 @@ class UserProfileController {
     String confirmarSenha,
   ) async {
     try {
-      print('🔄 Atualizando senha...');
       User? user = _firebaseAuth.currentUser;
 
       if (user == null) {
@@ -133,16 +124,13 @@ class UserProfileController {
       await user.reauthenticateWithCredential(credential);
       await user.updatePassword(novaSenha);
 
-      print('✅ Senha atualizada com sucesso');
       return true;
     } on FirebaseAuthException catch (e) {
-      print('❌ Erro ao atualizar senha: ${e.code}');
       if (e.code == 'wrong-password') {
         throw 'Senha atual está incorreta';
       }
       throw 'Erro ao atualizar senha: ${e.message}';
     } catch (e) {
-      print('❌ Erro geral: $e');
       rethrow;
     }
   }
@@ -150,16 +138,11 @@ class UserProfileController {
   // Obter posts de eventos do usuário
   Future<List<Evento>> obterPostsEventos() async {
     try {
-      print('🔄 Obtendo posts de eventos do usuário...');
       User? user = _firebaseAuth.currentUser;
 
       if (user == null) {
-        print('❌ Usuário não autenticado');
         return [];
       }
-
-      print('📍 User ID: ${user.uid}');
-      print('📍 Acessando collection: eventos');
 
       QuerySnapshot snapshot = await _firebaseFirestore
           .collection('eventos')
@@ -167,18 +150,14 @@ class UserProfileController {
           .orderBy('createdAt', descending: true)
           .get();
 
-      print('✅ ${snapshot.docs.length} posts de eventos encontrados');
 
       if (snapshot.docs.isEmpty) {
-        print('⚠️ Nenhum evento encontrado para este usuário');
         return [];
       }
 
       List<Evento> eventos = [];
       
       for (var doc in snapshot.docs) {
-        print('📄 Documento: ${doc.id}');
-        print('📊 Dados: ${doc.data()}');
         
         try {
           final userModel = UserModel(
@@ -210,16 +189,13 @@ class UserProfileController {
           );
           
           eventos.add(evento);
-          print('✅ Evento adicionado: ${evento.title}');
         } catch (e) {
-          print('❌ Erro ao processar evento: $e');
+          rethrow;
         }
       }
 
-      print('✅ Total de eventos processados: ${eventos.length}');
       return eventos;
     } catch (e) {
-      print('❌ Erro ao obter posts de eventos: $e');
       return [];
     }
   }
@@ -227,11 +203,9 @@ class UserProfileController {
   // Obter posts profissionais do usuário
   Future<List<ProfessionalPost>> obterPostsProfissionais() async {
     try {
-      print('🔄 Obtendo posts profissionais do usuário...');
       User? user = _firebaseAuth.currentUser;
 
       if (user == null) {
-        print('❌ Usuário não autenticado');
         return [];
       }
 
@@ -241,7 +215,6 @@ class UserProfileController {
           .orderBy('createdAt', descending: true)
           .get();
 
-      print('✅ ${snapshot.docs.length} posts profissionais encontrados');
 
       List<ProfessionalPost> posts = [];
       
@@ -272,15 +245,13 @@ class UserProfileController {
           );
           
           posts.add(post);
-          print('✅ Post profissional adicionado ao perfil');
         } catch (e) {
-          print('❌ Erro ao processar post profissional: $e');
+          rethrow;
         }
       }
 
       return posts;
     } catch (e) {
-      print('❌ Erro ao obter posts profissionais: $e');
       return [];
     }
   }
@@ -288,35 +259,29 @@ class UserProfileController {
   // Deletar post de evento
   Future<bool> deletarPostEvento(int postId) async {
     try {
-      print('🔄 Deletando post de evento ID: $postId');
       User? user = _firebaseAuth.currentUser;
 
       if (user == null) throw 'Usuário não autenticado';
 
-      // 🔥 BUSCA PELO ID NUMÉRICO NO CAMPO 'id'
+      //BUSCA PELO ID NUMÉRICO NO CAMPO 'id'
       QuerySnapshot snapshot = await _firebaseFirestore
           .collection('eventos')
           .where('id', isEqualTo: postId)
           .where('userId', isEqualTo: user.uid)
           .get();
 
-      print('📊 Documentos encontrados para deletar: ${snapshot.docs.length}');
 
       if (snapshot.docs.isEmpty) {
-        print('❌ Nenhum documento encontrado com ID: $postId');
         return false;
       }
 
-      // 🔥 DELETA CADA DOCUMENTO ENCONTRADO
+      // DELETA CADA DOCUMENTO ENCONTRADO
       for (var doc in snapshot.docs) {
-        print('🗑️ Deletando documento: ${doc.id}');
         await doc.reference.delete();
       }
 
-      print('✅ Post de evento deletado com sucesso');
       return true;
     } catch (e) {
-      print('❌ Erro ao deletar post: $e');
       return false;
     }
   }
@@ -324,7 +289,6 @@ class UserProfileController {
   // Deletar post profissional
   Future<bool> deletarPostProfissional(int postId) async {
     try {
-      print('🔄 Deletando post profissional...');
       User? user = _firebaseAuth.currentUser;
 
       if (user == null) throw 'Usuário não autenticado';
@@ -340,17 +304,14 @@ class UserProfileController {
         }
       });
 
-      print('✅ Post profissional deletado');
       return true;
     } catch (e) {
-      print('❌ Erro ao deletar post: $e');
       return false;
     }
   }
 
   Future<bool> atualizarPostEvento(Evento evento) async {
     try {
-      print('🔄 Atualizando evento...');
       User? user = _firebaseAuth.currentUser;
 
       if (user == null) throw 'Usuário não autenticado';
@@ -370,17 +331,14 @@ class UserProfileController {
         }
       });
 
-      print('✅ Evento atualizado com sucesso');
       return true;
     } catch (e) {
-      print('❌ Erro ao atualizar evento: $e');
       return false;
     }
   }
 
   Future<bool> atualizarPostProfissional(ProfessionalPost post) async {
     try {
-      print('🔄 Atualizando post profissional...');
       User? user = _firebaseAuth.currentUser;
 
       if (user == null) throw 'Usuário não autenticado';
@@ -398,10 +356,8 @@ class UserProfileController {
         }
       });
 
-      print('✅ Post profissional atualizado com sucesso');
       return true;
     } catch (e) {
-      print('❌ Erro ao atualizar post: $e');
       return false;
     }
   }
@@ -409,12 +365,9 @@ class UserProfileController {
   // Fazer logout
   Future<bool> fazerLogout() async {
     try {
-      print('🔄 Fazendo logout...');
       await _firebaseAuth.signOut();
-      print('✅ Logout realizado');
       return true;
     } catch (e) {
-      print('❌ Erro ao fazer logout: $e');
       return false;
     }
   }

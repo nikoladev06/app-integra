@@ -7,27 +7,21 @@ class ProfessionalFeed {
 
   Future<List<ProfessionalPost>> obterPostsProfissionais() async {
     try {
-      print('🔄 Obtendo posts profissionais do Firebase...');
-      print('📍 Acessando collection: posts_profissionais');
       
       QuerySnapshot snapshot = await _firebaseFirestore
           .collection('posts_profissionais')
           .orderBy('createdAt', descending: true)
           .get();
 
-      print('✅ ${snapshot.docs.length} posts profissionais encontrados');
       
       if (snapshot.docs.isEmpty) {
-        print('⚠️ Nenhum documento encontrado na collection');
         return [];
       }
 
       List<ProfessionalPost> posts = [];
       
       for (var doc in snapshot.docs) {
-        print('📄 Documento: ${doc.id}');
-        print('📊 Dados: ${doc.data()}');
-        
+
         try {
           final user = UserModel(
             uid: doc['userId'] ?? '',
@@ -54,16 +48,13 @@ class ProfessionalFeed {
           );
           
           posts.add(post);
-          print('✅ Post adicionado: ${post.description}');
         } catch (e) {
-          print('❌ Erro ao processar documento ${doc.id}: $e');
+          rethrow;
         }
       }
       
-      print('✅ Total de posts processados: ${posts.length}');
       return posts;
     } catch (e) {
-      print('❌ Erro ao obter posts profissionais: $e');
       return [];
     }
   }

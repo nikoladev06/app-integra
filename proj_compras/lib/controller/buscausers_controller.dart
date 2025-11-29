@@ -8,7 +8,6 @@ class BuscaUsersController {
     if (username.isEmpty) return [];
     
     try {
-      print('🔍 Buscando usuários com username: $username');
       
       QuerySnapshot snapshot = await _firebaseFirestore
           .collection('users')
@@ -24,14 +23,12 @@ class BuscaUsersController {
           final usuario = UserProfile.fromJson(data);
           usuarios.add(usuario);
         } catch (e) {
-          print('❌ Erro ao processar usuário: $e');
+           rethrow;
         }
       }
 
-      print('✅ ${usuarios.length} usuários encontrados');
       return usuarios;
     } catch (e) {
-      print('❌ Erro ao buscar usuários: $e');
       return [];
     }
   }

@@ -49,7 +49,7 @@ class _BuscaUserViewState extends State<BuscaUserView> {
         });
       }
     } catch (e) {
-      print('❌ Erro ao carregar eventos: $e');
+      rethrow;
     }
   }
 
@@ -67,7 +67,6 @@ class _BuscaUserViewState extends State<BuscaUserView> {
         });
       }
     } catch (e) {
-      print('❌ Erro ao carregar posts: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -287,9 +286,9 @@ class _BuscaUserViewState extends State<BuscaUserView> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      post.description,
+                                      post.title,
                                       style: const TextStyle(
-                                        fontSize: 14,
+                                        fontSize: 16,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white,
                                       ),
@@ -299,24 +298,34 @@ class _BuscaUserViewState extends State<BuscaUserView> {
                                     const SizedBox(height: 8),
                                     Row(
                                       children: [
-                                        Icon(
-                                          post.isLiked
-                                              ? Icons.favorite
-                                              : Icons.favorite_outline,
-                                          size: 18,
-                                          color: post.isLiked
-                                              ? Colors.red
-                                              : Colors.grey,
+                                        const Icon(
+                                          Icons.business,
+                                          size: 14,
+                                          color: Colors.grey,
                                         ),
                                         const SizedBox(width: 4),
-                                        Text(
-                                          '${post.likesCount}',
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey,
+                                        Expanded(
+                                          child: Text(
+                                            post.company,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: Colors.grey[400],
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                       ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      post.description,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey[400],
+                                      ),
+                                      maxLines: 4,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ],
                                 ),

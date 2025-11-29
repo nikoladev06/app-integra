@@ -42,7 +42,7 @@ class _UserProfileViewState extends State<UserProfileView> {
         });
       }
     } catch (e) {
-      print('❌ Erro ao carregar perfil: $e');
+      rethrow;
     }
   }
 
@@ -57,7 +57,6 @@ class _UserProfileViewState extends State<UserProfileView> {
         });
       }
     } catch (e) {
-      print('❌ Erro ao carregar eventos: $e');
       if (mounted) {
         setState(() => _isLoadingEventos = false);
       }
@@ -76,7 +75,6 @@ class _UserProfileViewState extends State<UserProfileView> {
         });
       }
     } catch (e) {
-      print('❌ Erro ao carregar posts profissionais: $e');
       if (mounted) {
         setState(() => _isLoadingProfissionais = false);
       }
@@ -84,7 +82,6 @@ class _UserProfileViewState extends State<UserProfileView> {
   }
 
   void _deletarEvento(int eventId) {
-    print('🔍 USERPROFILE: Tentando deletar evento com ID: $eventId');
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -98,20 +95,16 @@ class _UserProfileViewState extends State<UserProfileView> {
           ),
           TextButton(
             onPressed: () async {
-              print('🔍 USERPROFILE: Confirmada exclusão do ID: $eventId');
               Navigator.pop(context);
               
               bool sucesso = await _controller.deletarPostEvento(eventId);
               
               if (sucesso && mounted) {
-                print('✅ USERPROFILE: Evento $eventId deletado com sucesso');
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Evento deletado com sucesso')),
                 );
-                print('↩️ USERPROFILE: Voltando para HomeView...');
                 Navigator.pop(context);
               } else {
-                print('❌ USERPROFILE: Falha ao deletar evento $eventId');
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Erro ao deletar evento')),
                 );
@@ -600,24 +593,24 @@ class _UserProfileViewState extends State<UserProfileView> {
                         color: Colors.grey,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(
-                      evento.isLiked ? Icons.favorite : Icons.favorite_outline,
-                      size: 18,
-                      color: evento.isLiked ? Colors.red : Colors.grey,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${evento.likesCount}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
-                    ),
+                  // ],
+                // ),
+                // const SizedBox(height: 12),
+                // Row(
+                //   children: [
+                    // Icon(
+                    //   evento.isLiked ? Icons.favorite : Icons.favorite_outline,
+                    //   size: 18,
+                    //   color: evento.isLiked ? Colors.red : Colors.grey,
+                    // ),
+                    // const SizedBox(width: 4),
+                    // Text(
+                    //   '${evento.likesCount}',
+                    //   style: const TextStyle(
+                    //     fontSize: 12,
+                    //     color: Colors.grey,
+                    //   ),
+                    // ),
                     const Spacer(),
                     IconButton(
                       icon: Icon(
@@ -723,7 +716,7 @@ class _UserProfileViewState extends State<UserProfileView> {
                     fontSize: 13,
                     color: Colors.grey[400],
                   ),
-                  maxLines: 2,
+                  maxLines: 4,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 8),
@@ -742,24 +735,24 @@ class _UserProfileViewState extends State<UserProfileView> {
                         color: Colors.grey,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(
-                      post.isLiked ? Icons.favorite : Icons.favorite_outline,
-                      size: 18,
-                      color: post.isLiked ? Colors.red : Colors.grey,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${post.likesCount}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
-                    ),
+                  // ],
+                // ),
+                // const SizedBox(height: 12),
+                // Row(
+                //   children: [
+                    // Icon(
+                    //   post.isLiked ? Icons.favorite : Icons.favorite_outline,
+                    //   size: 18,
+                    //   color: post.isLiked ? Colors.red : Colors.grey,
+                    // ),
+                    // const SizedBox(width: 4),
+                    // Text(
+                    //   '${post.likesCount}',
+                    //   style: const TextStyle(
+                    //     fontSize: 12,
+                    //     color: Colors.grey,
+                    //   ),
+                    // ),
                     const Spacer(),
                     IconButton(
                       icon: Icon(

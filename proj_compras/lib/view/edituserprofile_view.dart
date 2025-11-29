@@ -45,7 +45,7 @@ class _EditUserProfileViewState extends State<EditUserProfileView> {
     super.dispose();
   }
 
-  // 🔥 MÉTODO PARA EDITAR EVENTO
+  // MÉTODO PARA EDITAR EVENTO
   void _editarEvento(Evento evento, Function onSave) {
     TextEditingController titleController =
         TextEditingController(text: evento.title);
@@ -149,7 +149,7 @@ class _EditUserProfileViewState extends State<EditUserProfileView> {
     );
   }
 
-  // 🔥 MÉTODO PARA EDITAR POST PROFISSIONAL
+  // MÉTODO PARA EDITAR POST PROFISSIONAL
   void _editarPostProfissional(ProfessionalPost post, Function onSave) {
     TextEditingController titleController = TextEditingController(text: post.title);
     TextEditingController companyController = TextEditingController(text: post.company);

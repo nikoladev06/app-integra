@@ -16,7 +16,6 @@ class AddEventoController {
     PlaceDetails? placeDetails,
   ) async {
     try {
-      print('🔄 Criando evento...');
       User? user = _firebaseAuth.currentUser;
 
       String? erroValidacao;
@@ -35,13 +34,11 @@ class AddEventoController {
         erroValidacao = 'A data do evento não pode ser no passado';
       }
 
-      // 🔥 SE TEM ERRO, MOSTRA E PARA AQUI
       if (erroValidacao != null) {
         _mostrarSnackBarErro(context, erroValidacao);
         return false;
       }
 
-      // 🔥 AGORA SABEMOS QUE USER E DATA NÃO SÃO NULL
       User userNonNull = user!;
       DateTime dataNonNull = data!;
 
@@ -78,19 +75,17 @@ class AddEventoController {
         'comentarios': [],
       });
 
-      print('✅ Evento criado com sucesso');
-      _mostrarSnackBarSucesso(context, '✅ Evento criado com sucesso!');
+      _mostrarSnackBarSucesso(context, 'Evento criado com sucesso!');
       return true;
     } catch (e) {
-      print('❌ Erro ao criar evento: $e');
-      _mostrarSnackBarErro(context, '❌ Erro ao criar evento: $e');
+      _mostrarSnackBarErro(context, 'Erro ao criar evento: $e');
       return false;
     }
   }
 
   // O método criarEvento antigo foi removido para evitar confusão.
 
-  // 🔥 SNACKBAR PARA ERROS (Vermelho)
+  // SNACKBAR PARA ERROS (Vermelho)
   void _mostrarSnackBarErro(BuildContext context, String mensagem) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -105,22 +100,22 @@ class AddEventoController {
     );
   }
 
-  // 🔥 SNACKBAR PARA DICAS (Azul)
-  void _mostrarSnackBarDica(BuildContext context, String mensagem) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(mensagem),
-        backgroundColor: Colors.blue[800],
-        duration: const Duration(seconds: 4),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    );
-  }
+  // SNACKBAR PARA DICAS (Azul)
+  // void _mostrarSnackBarDica(BuildContext context, String mensagem) {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Text(mensagem),
+  //       backgroundColor: Colors.blue[800],
+  //       duration: const Duration(seconds: 4),
+  //       behavior: SnackBarBehavior.floating,
+  //       shape: RoundedRectangleBorder(
+  //         borderRadius: BorderRadius.circular(8),
+  //       ),
+  //     ),
+  //   );
+  // }
 
-  // 🔥 SNACKBAR PARA SUCESSO (Verde)
+  // SNACKBAR PARA SUCESSO (Verde)
   void _mostrarSnackBarSucesso(BuildContext context, String mensagem) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

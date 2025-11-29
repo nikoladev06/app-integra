@@ -26,11 +26,11 @@ class GeocodingService {
           };
         }
       } else {
-        print('❌ HTTP Error: ${response.statusCode}');
+        print('HTTP Error: ${response.statusCode}');
       }
       return null;
     } catch (e) {
-      print('❌ Erro no geocoding: $e');
+      print('Erro no geocoding: $e');
       return null;
     }
   }
