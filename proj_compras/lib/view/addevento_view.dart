@@ -20,7 +20,7 @@ class _AddEventoViewState extends State<AddEventoView> {
   final TextEditingController _localizacaoController = TextEditingController();
   DateTime? _dataSelecionada;
   TimeOfDay _horaSelecionada = TimeOfDay.now();
-  PlaceDetails? _placeDetails; // 🔥 ARMAZENA OS DETALHES DO LOCAL
+  PlaceDetails? _placeDetails; // ARMAZENA OS DETALHES DO LOCAL
   final GooglePlacesService _placesService = GooglePlacesService();
   bool _isLoading = false;
 
@@ -89,7 +89,7 @@ Future<void> _criarEvento() async {
   setState(() => _isLoading = true);
 
   try {
-    // 🔥 ENVIA DateTime? E DEIXA O CONTROLLER VALIDAR
+    // ENVIA DateTime? E DEIXA O CONTROLLER VALIDAR
     DateTime? dataParaEnviar;
     if (_dataSelecionada != null) {
       dataParaEnviar = DateTime(
@@ -101,12 +101,11 @@ Future<void> _criarEvento() async {
       );
     }
 
-    // 🔥 AGORA ENVIAMOS OS DETALHES DO LOCAL (QUE CONTÊM LAT/LNG)
     final sucesso = await _controller.criarEventoComPlaceDetails(
       context,
       _tituloController.text,
       _descricaoController.text,
-      dataParaEnviar, // 🔥 PODE SER NULL - CONTROLLER VAI VALIDAR
+      dataParaEnviar,
       _placeDetails,
     );
 
@@ -117,7 +116,7 @@ Future<void> _criarEvento() async {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('❌ Erro inesperado: $e'),
+          content: Text('Erro inesperado: $e'),
           backgroundColor: Colors.red,
         ),
       );

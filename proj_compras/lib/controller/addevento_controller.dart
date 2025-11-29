@@ -2,7 +2,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import '../model/place_details_model.dart'; // 🔥 Importa o novo modelo
+import '../model/place_details_model.dart';
 
 class AddEventoController {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -59,14 +59,14 @@ class AddEventoController {
       // Criar documento do evento
       await _firebaseFirestore.collection('eventos').add({
         'id': eventoId,
-        'userId': userNonNull.uid, // 🔥 AGORA userNonNull.uid
+        'userId': userNonNull.uid,
         'title': titulo,
         'description': descricao,
-        'date': Timestamp.fromDate(dataNonNull), // 🔥 AGORA dataNonNull
-        'location': placeDetails!.formattedAddress, // Usa o endereço formatado
-        'latitude': placeDetails.latitude,       // Usa a latitude obtida
-        'longitude': placeDetails.longitude,      // Usa a longitude obtida
-        'imageUrl': '', // Você pode adicionar a lógica para imagem aqui
+        'date': Timestamp.fromDate(dataNonNull),
+        'location': placeDetails!.formattedAddress, 
+        'latitude': placeDetails.latitude,    
+        'longitude': placeDetails.longitude,      
+        'imageUrl': '',
         'nomeCompleto': userData['nomeCompleto'] ?? '',
         'username': userData['username'] ?? '',
         'createdAt': Timestamp.now(),

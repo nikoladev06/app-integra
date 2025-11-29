@@ -184,7 +184,7 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  // 🔥 NOVO MÉTODO: Diálogo do mapa
+
   void _mostrarDialogoMapa(String location, double lat, double lng) {
   showDialog(
     context: context,
@@ -221,7 +221,7 @@ class _HomeViewState extends State<HomeView> {
               if (await canLaunchUrl(Uri.parse(url))) {
                 await launchUrl(Uri.parse(url));
               } else {
-                // 🔥 SE NÃO ABRIR, OFERECE COPIAR
+                // SE NÃO ABRIR, OFERECE COPIAR
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: const Text('Não foi possível abrir o mapa automaticamente'),
@@ -239,7 +239,7 @@ class _HomeViewState extends State<HomeView> {
                 );
               }
             } catch (e) {
-              // 🔥 EM CASO DE ERRO, OFERECE COPIAR
+              // EM CASO DE ERRO, OFERECE COPIAR
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: const Text('Link do Maps: '),
@@ -348,7 +348,7 @@ class _HomeViewState extends State<HomeView> {
                         ).then((resultado) { 
                         if (resultado != null) {
                           if (resultado is Evento) {
-                            // 🔥 SE FOR EVENTO
+                            // SE FOR EVENTO
                             setState(() {
                               _currentIndex = 0;
                               _searchQuery = '';
@@ -366,7 +366,7 @@ class _HomeViewState extends State<HomeView> {
                               }
                             });
                           } else if (resultado is ProfessionalPost) {
-                            // 🔥 SE FOR POST PROFISSIONAL
+                            // SE FOR POST PROFISSIONAL
                             setState(() {
                               _currentIndex = 1;  // Muda para aba profissional
                               _searchQuery = '';

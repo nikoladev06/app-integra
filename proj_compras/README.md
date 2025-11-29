@@ -1,3 +1,3 @@
 # proj_compras
 
-A new Flutter project.
+Projeto Integra-App - Programação Mobile. Arthur e Nicolas
