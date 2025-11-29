@@ -7,6 +7,7 @@ class UserProfile {
   final String curso;
   final String profileImage;
   final DateTime criadoEm;
+  final DateTime? alteradoEm;
 
   UserProfile({
     required this.uid,
@@ -17,6 +18,7 @@ class UserProfile {
     required this.curso,
     required this.profileImage,
     required this.criadoEm,
+    this.alteradoEm,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -31,6 +33,10 @@ class UserProfile {
       criadoEm: json['criadoEm'] != null
           ? DateTime.parse(json['criadoEm'].toDate().toString())
           : DateTime.now(),
+      alteradoEm: json['alteradoEm'] != null
+          ? DateTime.parse(json['alteradoEm'].toDate().toString())
+          : null,
+      
     );
   }
 
@@ -44,6 +50,7 @@ class UserProfile {
       'curso': curso,
       'profileImage': profileImage,
       'criadoEm': criadoEm,
+      'alteradoEm': alteradoEm,
     };
   }
 }

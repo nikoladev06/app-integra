@@ -81,6 +81,7 @@ class UserProfileController {
         'username': username.toLowerCase(),
         'universidade': universidade,
         'curso': curso,
+        'alteradoEm': DateTime.now(),
       });
 
       print('✅ Perfil atualizado com sucesso');
@@ -258,7 +259,9 @@ class UserProfileController {
 
           final post = ProfessionalPost(
             id: doc['id'] ?? 0,
+            title: doc['title'] ?? '',
             description: doc['description'] ?? '',
+            company: doc['company'] ?? '',
             user: userModel,
             createdAt: doc['createdAt'] != null
                 ? (doc['createdAt'] as Timestamp).toDate()
@@ -341,6 +344,64 @@ class UserProfileController {
       return true;
     } catch (e) {
       print('❌ Erro ao deletar post: $e');
+      return false;
+    }
+  }
+
+  Future<bool> atualizarPostEvento(Evento evento) async {
+    try {
+      print('🔄 Atualizando evento...');
+      User? user = _firebaseAuth.currentUser;
+
+      if (user == null) throw 'Usuário não autenticado';
+
+      await _firebaseFirestore
+          .collection('eventos')
+          .where('id', isEqualTo: evento.id)
+          .where('userId', isEqualTo: user.uid)
+          .get()
+          .then((snapshot) {
+        for (var doc in snapshot.docs) {
+          doc.reference.update({
+            'title': evento.title,
+            'description': evento.description,
+            'location': evento.location,
+          });
+        }
+      });
+
+      print('✅ Evento atualizado com sucesso');
+      return true;
+    } catch (e) {
+      print('❌ Erro ao atualizar evento: $e');
+      return false;
+    }
+  }
+
+  Future<bool> atualizarPostProfissional(ProfessionalPost post) async {
+    try {
+      print('🔄 Atualizando post profissional...');
+      User? user = _firebaseAuth.currentUser;
+
+      if (user == null) throw 'Usuário não autenticado';
+
+      await _firebaseFirestore
+          .collection('posts_profissionais')
+          .where('id', isEqualTo: post.id)
+          .where('userId', isEqualTo: user.uid)
+          .get()
+          .then((snapshot) {
+        for (var doc in snapshot.docs) {
+          doc.reference.update({
+            'description': post.description,
+          });
+        }
+      });
+
+      print('✅ Post profissional atualizado com sucesso');
+      return true;
+    } catch (e) {
+      print('❌ Erro ao atualizar post: $e');
       return false;
     }
   }

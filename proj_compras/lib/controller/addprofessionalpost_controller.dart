@@ -7,6 +7,7 @@ class AddProfessionalPostController {
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
   Future<bool> criarPostProfissional(
+    String titulo, 
     String descricao,
     String tipo, // vaga, oportunidade, estágio, etc
     String empresa,
@@ -49,6 +50,7 @@ class AddProfessionalPostController {
       await _firebaseFirestore.collection('posts_profissionais').add({
         'id': postId,
         'userId': user.uid,
+        'title': titulo,
         'description': descricao,
         'type': tipo,
         'company': empresa,

@@ -98,8 +98,8 @@ class _UserProfileViewState extends State<UserProfileView> {
           ),
           TextButton(
             onPressed: () async {
-               print('🔍 USERPROFILE: Confirmada exclusão do ID: $eventId');
-              Navigator.pop(context); // Fecha diálogo
+              print('🔍 USERPROFILE: Confirmada exclusão do ID: $eventId');
+              Navigator.pop(context);
               
               bool sucesso = await _controller.deletarPostEvento(eventId);
               
@@ -108,8 +108,6 @@ class _UserProfileViewState extends State<UserProfileView> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Evento deletado com sucesso')),
                 );
-                
-                // 🔥 VOLTA DIRETO PARA O HOMEVIEW
                 print('↩️ USERPROFILE: Voltando para HomeView...');
                 Navigator.pop(context);
               } else {
@@ -131,14 +129,8 @@ class _UserProfileViewState extends State<UserProfileView> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1F1F20),
-        title: const Text(
-          'Deletar Post',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: const Text(
-          'Tem certeza que deseja deletar este post?',
-          style: TextStyle(color: Colors.grey),
-        ),
+        title: const Text('Deletar Post', style: TextStyle(color: Colors.white)),
+        content: const Text('Tem certeza que deseja deletar este post?', style: TextStyle(color: Colors.grey)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -152,27 +144,207 @@ class _UserProfileViewState extends State<UserProfileView> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Post deletado com sucesso')),
                 );
-
-                Navigator.pop(context);
-
-                await _carregarPostsProfissionais();
-                
+                _carregarPostsProfissionais();
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Erro ao deletar post')),
                 );
               }
             },
-            child: const Text(
-              'Deletar',
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text('Deletar', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
   }
 
+  void _editarEvento(Evento evento) {
+    TextEditingController titleController = TextEditingController(text: evento.title);
+    TextEditingController descriptionController = TextEditingController(text: evento.description);
+    TextEditingController locationController = TextEditingController(text: evento.location);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1F1F20),
+        title: const Text('Editar Evento', style: TextStyle(color: Colors.white)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Título',
+                  hintStyle: TextStyle(color: Colors.grey[500]),
+                  filled: true,
+                  fillColor: const Color(0xFF111112),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: descriptionController,
+                style: const TextStyle(color: Colors.white),
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Descrição',
+                  hintStyle: TextStyle(color: Colors.grey[500]),
+                  filled: true,
+                  fillColor: const Color(0xFF111112),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: locationController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Localização',
+                  hintStyle: TextStyle(color: Colors.grey[500]),
+                  filled: true,
+                  fillColor: const Color(0xFF111112),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+                Navigator.pop(context);
+
+                final eventoAtualizado = Evento(
+                  id: evento.id,
+                  title: titleController.text,
+                  description: descriptionController.text,
+                  location: locationController.text,
+                  date: evento.date,
+                  latitude: evento.latitude,
+                  longitude: evento.longitude,
+                  user: evento.user,
+                  isLiked: evento.isLiked,
+                  likesCount: evento.likesCount,
+                );
+
+              bool sucesso = await _controller.atualizarPostEvento(eventoAtualizado);
+              if (sucesso && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Evento atualizado com sucesso')),
+                );
+                _carregarEventos();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Erro ao atualizar evento')),
+                );
+              }
+            },
+            child: const Text('Salvar', style: TextStyle(color: Colors.blue)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _editarPostProfissional(ProfessionalPost post) { 
+    TextEditingController titleController = TextEditingController(text: post.title);
+    TextEditingController companyController = TextEditingController(text: post.company);
+    TextEditingController descriptionController = TextEditingController(text: post.description);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1F1F20),
+        title: const Text('Editar Post', style: TextStyle(color: Colors.white)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Título',
+                  hintStyle: TextStyle(color: Colors.grey[500]),
+                  filled: true,
+                  fillColor: const Color(0xFF111112),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: companyController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Empresa',
+                  hintStyle: TextStyle(color: Colors.grey[500]),
+                  filled: true,
+                  fillColor: const Color(0xFF111112),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: descriptionController,
+                style: const TextStyle(color: Colors.white),
+                maxLines: 4,
+                decoration: InputDecoration(
+                  hintText: 'Descrição',
+                  hintStyle: TextStyle(color: Colors.grey[500]),
+                  filled: true,
+                  fillColor: const Color(0xFF111112),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+
+              final postAtualizado = ProfessionalPost(
+                id: post.id,
+                title: titleController.text,
+                description: descriptionController.text,
+                company: companyController.text,
+                user: post.user,
+                isLiked: post.isLiked,
+                likesCount: post.likesCount,
+                createdAt: post.createdAt,
+                imageUrl: post.imageUrl,
+                comentarios: post.comentarios,
+              );
+
+              bool sucesso = await _controller.atualizarPostProfissional(postAtualizado);
+              if (sucesso && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Post atualizado com sucesso')),
+                );
+                _carregarPostsProfissionais();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Erro ao atualizar post')),
+                );
+              }
+            },
+            child: const Text('Salvar', style: TextStyle(color: Colors.blue)),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -180,10 +352,9 @@ class _UserProfileViewState extends State<UserProfileView> {
       backgroundColor: const Color(0xFF111112),
       appBar: AppBar(
         title: const Text('Meu Perfil', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF1F1F20), // A cor de fundo escura
+        backgroundColor: const Color(0xFF1F1F20),
         elevation: 0,
-        // Adicione esta linha para corrigir a cor da seta de voltar
-        iconTheme: const IconThemeData(color: Colors.white), 
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -393,18 +564,22 @@ class _UserProfileViewState extends State<UserProfileView> {
                 ),
                 const SizedBox(height: 8),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
-                      Icons.location_on_outlined,
-                      size: 12,
-                      color: Colors.grey,
+                    const Padding(
+                      padding: EdgeInsets.only(top: 2),
+                      child: Icon(Icons.location_on_outlined, size: 12, color: Colors.grey),
                     ),
                     const SizedBox(width: 4),
-                    Text(
-                      evento.location,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
+                    Expanded(
+                      child: Text(
+                        evento.location,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
+                        ),
+                        softWrap: true,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -431,9 +606,7 @@ class _UserProfileViewState extends State<UserProfileView> {
                 Row(
                   children: [
                     Icon(
-                      evento.isLiked
-                          ? Icons.favorite
-                          : Icons.favorite_outline,
+                      evento.isLiked ? Icons.favorite : Icons.favorite_outline,
                       size: 18,
                       color: evento.isLiked ? Colors.red : Colors.grey,
                     ),
@@ -446,6 +619,14 @@ class _UserProfileViewState extends State<UserProfileView> {
                       ),
                     ),
                     const Spacer(),
+                    IconButton(
+                      icon: Icon(
+                        Icons.edit,
+                        color: Colors.blue,
+                        size: 18,
+                      ),
+                      onPressed: () => _editarEvento(evento),
+                    ),
                     IconButton(
                       icon: const Icon(
                         Icons.delete_outline,
@@ -504,7 +685,7 @@ class _UserProfileViewState extends State<UserProfileView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  post.description,
+                  post.title,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -512,6 +693,28 @@ class _UserProfileViewState extends State<UserProfileView> {
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.business,
+                      size: 14,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        post.company,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey[400],
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -545,9 +748,7 @@ class _UserProfileViewState extends State<UserProfileView> {
                 Row(
                   children: [
                     Icon(
-                      post.isLiked
-                          ? Icons.favorite
-                          : Icons.favorite_outline,
+                      post.isLiked ? Icons.favorite : Icons.favorite_outline,
                       size: 18,
                       color: post.isLiked ? Colors.red : Colors.grey,
                     ),
@@ -561,13 +762,20 @@ class _UserProfileViewState extends State<UserProfileView> {
                     ),
                     const Spacer(),
                     IconButton(
+                      icon: Icon(
+                        Icons.edit,
+                        color: Colors.blue,
+                        size: 18,
+                      ),
+                      onPressed: () => _editarPostProfissional(post),
+                    ),
+                    IconButton(
                       icon: const Icon(
                         Icons.delete_outline,
                         color: Colors.red,
                         size: 18,
                       ),
-                      onPressed: () =>
-                          _deletarPostProfissional(post.id),
+                      onPressed: () => _deletarPostProfissional(post.id),
                     ),
                   ],
                 ),

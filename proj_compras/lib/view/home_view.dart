@@ -13,6 +13,8 @@ import 'package:flutter/services.dart';
 import 'userprofile_view.dart';
 import 'addevento_view.dart';
 import 'addprofessionalpost_view.dart';
+import '../controller/buscausers_controller.dart';
+import 'buscausers_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -27,6 +29,7 @@ class _HomeViewState extends State<HomeView> {
       feed_eventos.FeedEventos();
   final feed_profissional.ProfessionalFeed _feedProfissionalController =
       feed_profissional.ProfessionalFeed();
+  final BuscaUsersController _buscaUsersController = BuscaUsersController();
 
   int _currentIndex = 0;
   late List<Evento> _eventosAtuais;
@@ -34,13 +37,23 @@ class _HomeViewState extends State<HomeView> {
   bool _isLoadingEventos = true;
   UserProfile? _userProfile;
   bool _isLoadingProfissional = true;
+  String _searchQuery = '';
+  List<UserProfile> _searchResults = [];
+  late ScrollController _scrollController; 
 
   @override
   void initState() {
     super.initState();
     _eventosAtuais = [];
     _postsAtuais = [];
+    _scrollController = ScrollController();
     _carregarDados();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _carregarDados() async {
@@ -263,6 +276,131 @@ class _HomeViewState extends State<HomeView> {
     ),
   );
 }
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          TextField(
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Pesquisar pelo username',
+              hintStyle: TextStyle(color: Colors.grey[500]),
+              filled: true,
+              fillColor: const Color(0xFF1F1F20),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              prefixIcon: const Icon(Icons.search, color: Colors.grey),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, color: Colors.grey),
+                      onPressed: () {
+                        setState(() {
+                          _searchQuery = '';
+                          _searchResults = [];
+                        });
+                        FocusScope.of(context).unfocus();
+                      },
+                    )
+                  : null,
+            ),
+            onChanged: (value) async {
+              setState(() => _searchQuery = value);
+              if (value.isNotEmpty) {
+                final resultados =
+                    await _buscaUsersController.buscarPorUsername(value);
+                setState(() => _searchResults = resultados);
+              } else {
+                setState(() => _searchResults = []);
+              }
+            },
+          ),
+          if (_searchResults.isNotEmpty)
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              constraints: const BoxConstraints(maxHeight: 200),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1F1F20),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: ListView.builder(
+                shrinkWrap: true,
+                physics: const ScrollPhysics(),
+                itemCount: _searchResults.length,
+                itemBuilder: (context, index) {
+                  final usuario = _searchResults[index];
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.grey[800],
+                      child: Text(
+                        usuario.nomeCompleto[0].toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    title: Text(
+                      usuario.nomeCompleto,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    subtitle: Text(
+                      '@${usuario.username}',
+                      style: TextStyle(color: Colors.grey[500]),
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              BuscaUserView(usuario: usuario),
+                        ),
+                        ).then((resultado) { 
+                        if (resultado != null) {
+                          if (resultado is Evento) {
+                            // 🔥 SE FOR EVENTO
+                            setState(() {
+                              _currentIndex = 0;
+                              _searchQuery = '';
+                              _searchResults = [];
+                            });
+                            
+                            Future.delayed(const Duration(milliseconds: 300), () {
+                              final indexEvento = _eventosAtuais.indexWhere((e) => e.id == resultado.id);
+                              if (indexEvento != -1 && mounted && _scrollController.hasClients) {
+                                _scrollController.animateTo(
+                                  indexEvento * 250.0,
+                                  duration: const Duration(milliseconds: 600),
+                                  curve: Curves.easeInOut,
+                                );
+                              }
+                            });
+                          } else if (resultado is ProfessionalPost) {
+                            // 🔥 SE FOR POST PROFISSIONAL
+                            setState(() {
+                              _currentIndex = 1;  // Muda para aba profissional
+                              _searchQuery = '';
+                              _searchResults = [];
+                            });
+                          }
+                        } else {
+                          setState(() {
+                            _searchQuery = '';
+                            _searchResults = [];
+                          });
+                        }
+                      });
+                    },
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -409,8 +547,13 @@ class _HomeViewState extends State<HomeView> {
           ],
         ),
       ),
-      body: _buildBody(),
-      
+
+      body: Column(
+              children: [
+                _buildSearchBar(),
+                Expanded(child: _buildBody()),
+              ],
+            ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF6200EE),
         onPressed: () async {
@@ -490,6 +633,7 @@ class _HomeViewState extends State<HomeView> {
               : RefreshIndicator(
                   onRefresh: _carregarEventos,
                   child: ListView.builder(
+                    controller: _scrollController,
                     padding: const EdgeInsets.all(16),
                     itemCount: _eventosAtuais.length,
                     itemBuilder: (context, index) {
@@ -653,7 +797,7 @@ class _HomeViewState extends State<HomeView> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                post.description,
+                                post.title,
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -661,6 +805,28 @@ class _HomeViewState extends State<HomeView> {
                                 ),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  const Icon(
+                                    Icons.business,
+                                    size: 14,
+                                    color: Colors.grey,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      post.company,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.grey[400],
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 8),
                               Text(

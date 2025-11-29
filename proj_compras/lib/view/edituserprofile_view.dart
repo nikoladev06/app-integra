@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../controller/userprofile_controller.dart';
 import '../model/user_profile_model.dart';
+import '../model/postevento_model.dart';
+import '../model/professionalpost_model.dart';
 
 class EditUserProfileView extends StatefulWidget {
   final UserProfile userProfile;
@@ -41,6 +43,176 @@ class _EditUserProfileViewState extends State<EditUserProfileView> {
     _universidadeController.dispose();
     _cursoController.dispose();
     super.dispose();
+  }
+
+  // 🔥 MÉTODO PARA EDITAR EVENTO
+  void _editarEvento(Evento evento, Function onSave) {
+    TextEditingController titleController =
+        TextEditingController(text: evento.title);
+    TextEditingController descriptionController =
+        TextEditingController(text: evento.description);
+    TextEditingController locationController =
+        TextEditingController(text: evento.location);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1F1F20),
+        title: const Text('Editar Evento',
+            style: TextStyle(color: Colors.white)),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Título',
+                  hintStyle: TextStyle(color: Colors.grey[500]),
+                  filled: true,
+                  fillColor: const Color(0xFF111112),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: descriptionController,
+                style: const TextStyle(color: Colors.white),
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Descrição',
+                  hintStyle: TextStyle(color: Colors.grey[500]),
+                  filled: true,
+                  fillColor: const Color(0xFF111112),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: locationController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Localização',
+                  hintStyle: TextStyle(color: Colors.grey[500]),
+                  filled: true,
+                  fillColor: const Color(0xFF111112),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final eventoAtualizado = Evento(
+                id: evento.id,
+                title: titleController.text,
+                description: descriptionController.text,
+                location: locationController.text,
+                date: evento.date,
+                latitude: evento.latitude,
+                longitude: evento.longitude,
+                user: evento.user,
+                isLiked: evento.isLiked,
+                likesCount: evento.likesCount,
+              );
+
+              bool sucesso =
+                  await _controller.atualizarPostEvento(eventoAtualizado);
+              if (sucesso && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('Evento atualizado com sucesso')),
+                );
+                onSave();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Erro ao atualizar evento')),
+                );
+              }
+            },
+            child: const Text('Salvar',
+                style: TextStyle(color: Colors.blue)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 🔥 MÉTODO PARA EDITAR POST PROFISSIONAL
+  void _editarPostProfissional(ProfessionalPost post, Function onSave) {
+    TextEditingController titleController = TextEditingController(text: post.title);
+    TextEditingController companyController = TextEditingController(text: post.company);
+    TextEditingController descriptionController = TextEditingController(text: post.description);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1F1F20),
+        title: const Text('Editar Post',
+            style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: descriptionController,
+          style: const TextStyle(color: Colors.white),
+          maxLines: 4,
+          decoration: InputDecoration(
+            hintText: 'Descrição',
+            hintStyle: TextStyle(color: Colors.grey[500]),
+            filled: true,
+            fillColor: const Color(0xFF111112),
+            border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8)),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final postAtualizado = ProfessionalPost(
+                id: post.id,
+                title: titleController.text,
+                description: descriptionController.text,
+                company: companyController.text,
+                user: post.user,
+                isLiked: post.isLiked,
+                likesCount: post.likesCount,
+                createdAt: post.createdAt,
+              );
+
+              bool sucesso = await _controller
+                  .atualizarPostProfissional(postAtualizado);
+              if (sucesso && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text('Post atualizado com sucesso')),
+                );
+                onSave();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Erro ao atualizar post')),
+                );
+              }
+            },
+            child: const Text('Salvar',
+                style: TextStyle(color: Colors.blue)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

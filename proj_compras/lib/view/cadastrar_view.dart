@@ -206,6 +206,7 @@ class _CadastrarViewState extends State<CadastrarView> {
                               _usernameController.text,
                               _universidadeController.text,
                               _cursoController.text,
+                              _telefoneController.text,
                               _senhaController.text,
                               _confirmacaoSenhaController.text,
                             );

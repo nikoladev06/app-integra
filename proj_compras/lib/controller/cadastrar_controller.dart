@@ -47,6 +47,7 @@ class CadastrarController {
     String username,
     String universidade,
     String curso,
+    String telefone,
     String senha,
     String confirmarSenha,
   ) async {
@@ -55,13 +56,13 @@ class CadastrarController {
 
       // Validações
       print('🔍 Validando campos...');
-      
-      if (nomeCompleto.isEmpty || nomeCompleto.split(' ').length < 2) {
-        throw 'Nome completo deve ter pelo menos 2 nomes';
-      }
 
       if (email.isEmpty || !RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(email)) {
         throw 'Email inválido. Use o formato: usuario@exemplo.com';
+      }
+      
+      if (nomeCompleto.isEmpty || nomeCompleto.split(' ').length < 2) {
+        throw 'Nome completo deve ter pelo menos 2 nomes';
       }
 
       if (username.isEmpty || username.length < 3) {
@@ -87,6 +88,12 @@ class CadastrarController {
       if (senha != confirmarSenha) {
         throw 'As senhas não correspondem';
       }
+
+      if (telefone.isEmpty ||
+        !RegExp(r'^\(?\d{2}\)?[\s-]?\d{4,5}-?\d{4}$').hasMatch(telefone)) {
+        throw 'Telefone inválido. Use o formato (XX)XXXXX-XXXX ou XXXXXXXXXXX';
+      }
+
 
       print('✅ Validações concluídas');
 
@@ -124,6 +131,7 @@ class CadastrarController {
         'username': username.toLowerCase(),
         'universidade': universidade,
         'curso': curso,
+        'telefone': telefone,
         'profileImage': '',
         'criadoEm': DateTime.now(),
       });

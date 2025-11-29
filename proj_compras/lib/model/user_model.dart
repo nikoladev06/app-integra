@@ -8,6 +8,7 @@ class UserModel {
   final String telefone;
   final String? profileImage;
   final DateTime dataCriacao;
+  final DateTime? dataAlteracao;
 
   UserModel({
     required this.uid,
@@ -19,6 +20,7 @@ class UserModel {
     required this.telefone,
     this.profileImage,
     DateTime? dataCriacao,
+    this.dataAlteracao,
   }) : dataCriacao = dataCriacao ?? DateTime.now();
 
   // Converter para JSON para salvar no Firestore
@@ -33,6 +35,7 @@ class UserModel {
       'telefone': telefone,
       'profileImage': profileImage,
       'dataCriacao': dataCriacao,
+      'dataAlteracao': dataAlteracao,
     };
   }
 

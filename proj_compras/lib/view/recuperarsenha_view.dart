@@ -10,12 +10,10 @@ class RecuperarsenhaView extends StatefulWidget {
 }
 
 class _RecuperarsenhaViewState extends State<RecuperarsenhaView> {
-    final RecuperarsenhaController _controller = RecuperarsenhaController();
-    final TextEditingController _emailController = TextEditingController();
-
+  final RecuperarsenhaController _controller = RecuperarsenhaController();
+  final TextEditingController _emailController = TextEditingController();
 
   @override
-
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF111112),
@@ -30,9 +28,25 @@ class _RecuperarsenhaViewState extends State<RecuperarsenhaView> {
                 height: 150,
                 fit: BoxFit.contain,
               ),
-
               const SizedBox(height: 40),
-
+              const Text(
+                'Recuperar Senha',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Digite seu e-mail para receber um link de recuperação',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 40),
               TextField(
                 controller: _emailController,
                 style: const TextStyle(color: Colors.white),
@@ -48,72 +62,84 @@ class _RecuperarsenhaViewState extends State<RecuperarsenhaView> {
                   prefixIcon: const Icon(Icons.email, color: Colors.white),
                 ),
               ),
-
               const SizedBox(height: 16),
-
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    _controller.recuperar(
-                      context, 
-                      _emailController.text, 
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF45b5b7),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              ListenableBuilder(
+                listenable: _controller,
+                builder: (context, child) {
+                  return SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _controller.isLoading
+                          ? null
+                          : () {
+                              _controller.recuperar(
+                                context,
+                                _emailController.text,
+                              );
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF45b5b7),
+                        disabledBackgroundColor: Colors.grey[600],
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: _controller.isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Text(
+                              'Enviar e-mail',
+                              style: TextStyle(fontSize: 18),
+                            ),
                     ),
-                  ),
-                  child: const Text(
-                    'Enviar e-mail',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                ),
+                  );
+                },
               ),
-
               const SizedBox(height: 16),
-
               SizedBox(
                 width: double.infinity,
                 child: RichText(
                   textAlign: TextAlign.center,
                   text: TextSpan(
-                    text: "Recuperou? ",
-                    style: const TextStyle(color: Colors.white, fontSize: 18),
+                    text: "Voltou? ",
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
                     children: [
                       TextSpan(
-                        text: "Entre com a nova senha",
+                        text: "Faça login",
                         style: const TextStyle(
-                          color: Color(0xFF45b5b7), // cor de destaque, tipo link
+                          color: Color(0xFF45b5b7),
                           fontWeight: FontWeight.bold,
-                          decoration: TextDecoration.underline, // opcional
+                          decoration: TextDecoration.underline,
                         ),
                         recognizer: TapGestureRecognizer()
                           ..onTap = () {
-                            // Navegar para a tela de cadastro
-                            Navigator.pushNamed(context, 'login');
+                            Navigator.pushReplacementNamed(context, 'login');
                           },
                       ),
                     ],
                   ),
                 ),
               ),
-
             ],
-          )
-        )
-      )
+          ),
+        ),
+      ),
     );
   }
 
-  //limpar os recursos quando o widget é removido da tela.
   @override
   void dispose() {
     _emailController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 }

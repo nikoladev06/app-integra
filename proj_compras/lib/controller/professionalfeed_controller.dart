@@ -41,7 +41,9 @@ class ProfessionalFeed {
           
           final post = ProfessionalPost(
             id: doc['id'] ?? 0,
+            title: doc['title'] ?? '',
             description: doc['description'] ?? '',
+            company: doc['company'] ?? '',
             user: user,
             createdAt: doc['createdAt'] != null
                 ? (doc['createdAt'] as Timestamp).toDate()

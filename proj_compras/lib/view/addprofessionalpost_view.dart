@@ -14,6 +14,7 @@ class _AddProfessionalPostViewState extends State<AddProfessionalPostView> {
       AddProfessionalPostController();
   final TextEditingController _descricaoController = TextEditingController();
   final TextEditingController _empresaController = TextEditingController();
+  final TextEditingController _tituloController = TextEditingController();
   String? _tipoSelecionado;
   bool _isLoading = false;
 
@@ -26,13 +27,15 @@ class _AddProfessionalPostViewState extends State<AddProfessionalPostView> {
 
   @override
   void dispose() {
+    _tituloController.dispose();
     _descricaoController.dispose();
     _empresaController.dispose();
     super.dispose();
   }
 
   Future<void> _criarPost() async {
-    if (_descricaoController.text.isEmpty ||
+    if (_tituloController.text.isEmpty ||
+        _descricaoController.text.isEmpty ||
         _empresaController.text.isEmpty ||
         _tipoSelecionado == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -45,6 +48,7 @@ class _AddProfessionalPostViewState extends State<AddProfessionalPostView> {
 
     try {
       await _controller.criarPostProfissional(
+        _tituloController.text, 
         _descricaoController.text,
         _tipoSelecionado!,
         _empresaController.text,
@@ -112,6 +116,23 @@ class _AddProfessionalPostViewState extends State<AddProfessionalPostView> {
                 });
               },
             ),
+            const SizedBox(height: 16),
+            TextField(
+            controller: _tituloController,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              labelText: 'Título',
+              labelStyle: const TextStyle(color: Colors.grey),
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey[600]!),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: const BorderSide(color: Color(0xFF6200EE)),
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
             const SizedBox(height: 16),
             TextField(
               controller: _empresaController,
